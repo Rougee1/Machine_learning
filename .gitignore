@@ -25,3 +25,8 @@ Thumbs.db
 *.tmp
 *.log
 
+# Fichiers de résumé personnels (pas sur GitHub)
+resumeTP3.md
+resumeTP4.md
+guide_technologies_mlops.md
+top

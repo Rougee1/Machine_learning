@@ -12,6 +12,7 @@ services:
     build: ./services/prefect
     depends_on:
       - postgres
+      - mlflow
     env_file: .env          # Réutiliser les mêmes identifiants Postgres
     environment:
       PREFECT_API_URL: http://0.0.0.0:4200/api
@@ -22,9 +23,42 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+      MLFLOW_TRACKING_URI: http://mlflow:5000
     volumes:
       - ./services/prefect:/opt/prefect/flows
-      - ./data:/data:ro     # Rendre les CSV accessibles au conteneur Prefect
+      - ./data:/data            # enlever :ro pour rendre le volume en écriture
+      - ./services/feast_repo/repo:/repo          # Accès à Feast
+
+  feast:
+    build: ./services/feast_repo
+    depends_on:
+      - postgres
+    environment:
+      FEAST_USAGE: "False"
+    volumes:
+      - ./services/feast_repo/repo:/repo
+
+  api:
+    build: ./api
+    env_file: .env
+    depends_on:
+      - postgres
+      - feast
+      - mlflow
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+      - ./services/feast_repo/repo:/repo   # pour que l'API voie le repo Feast
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.16.0
+    command: mlflow server --backend-store-uri sqlite:///mlartifacts/mlflow.db --default-artifact-root mlflow-artifacts:/ --host 0.0.0.0 --port 5000 --serve-artifacts --artifacts-destination /mlartifacts/artifacts
+    volumes:
+      - "./mlartifacts:/mlartifacts"
+    ports:
+      - "5000:5000"
 
 volumes:
   pgdata:
+  mlartifacts:
