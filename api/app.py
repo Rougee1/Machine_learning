@@ -90,9 +90,7 @@ def predict(payload: UserPayload):
             return {
                 "error": f"Missing features for user_id={payload.user_id}",
                 "missing_features": missing,
-            }
-
-    # Nettoyage minimal (évite bugs de types)
+            }    # Nettoyage minimal (évite bugs de types)
     X = X.drop(columns=["user_id"], errors="ignore")
 
     # TODO 4: appeler le modèle et produire la réponse JSON (prediction + proba optionnelle)
@@ -101,9 +99,7 @@ def predict(payload: UserPayload):
     y_pred = model.predict(X)
 
     # TODO: observe latency in seconds (end - start)
-    REQUEST_LATENCY.observe(time.time() - start_time)
-
-    # TODO 5 : Retourner la prédiction
+    REQUEST_LATENCY.observe(time.time() - start_time)    # TODO 5 : Retourner la prédiction
     return {
         "user_id": payload.user_id,
         "prediction": int(y_pred[0]),
